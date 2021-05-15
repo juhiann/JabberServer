@@ -1,4 +1,91 @@
 package com.bham.fsd.assignments.jabberserver.controller;
 
-public class JabberController {
+import com.bham.fsd.assignments.jabberserver.JabberMessage;
+import com.bham.fsd.assignments.jabberserver.server.JabberDatabase;
+
+public class JabberController
+{
+    private static JabberDatabase jdb = new JabberDatabase();
+    private static JabberMessage responseJabberMessage;
+
+
+    private static final String[] INCOME_MESSAGES =
+            {
+                    "signin",
+                    "register",
+                    "signout",
+                    "timeline"
+            };
+    private static final String[] RESPONSES =
+            {
+                    "signedin",
+                    "unknown-user",
+                    "timeline",
+                    "users"
+            };
+
+    /**
+     * checks if message is valid
+     * @param jMsg
+     */
+    public static boolean isValidJabberMessage(JabberMessage jMsg)
+    {
+        for (String msg : JabberController.INCOME_MESSAGES)
+        {
+            if (jMsg.getMessage().split(" ")[0].equals(msg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @param jmsg
+     */
+    public static void processRequest(JabberMessage jmsg)
+    {
+        String prefix = jmsg.getMessage().split(" ")[0];
+        String suffix = jmsg.getMessage().split(" ")[11];
+
+        if(isValidJabberMessage(jmsg))
+        {
+            switch (prefix)
+            {
+                case ("signin"):
+                    int response = jdb.getUserID(suffix);
+                    if(response < 0) {
+                        responseJabberMessage = new JabberMessage(RESPONSES[1]); //unsuccessful
+                        System.out.println("[DATABASE]: User is INVALID");
+                    } else {
+                        responseJabberMessage = new JabberMessage(RESPONSES[0]); //successful
+                        System.out.println("[DATABASE]: User is VALID");
+                    }
+                    break;
+                case ("register"):
+                    response = jdb.getUserID(suffix);
+                    if(response > 0) {
+                        responseJabberMessage = new JabberMessage(RESPONSES[1]); // Already exists
+                        System.out.println("[DATABASE]: User already registered");
+                    } else {
+                        jdb.addUser(suffix, (suffix+"@email.com"));
+                        responseJabberMessage = new JabberMessage(RESPONSES[0]); //user added and signedin
+                        System.out.println("[DATABASE]: User added to DB");
+                    }
+                    break;
+                case ("signout"):
+                    responseJabberMessage = new JabberMessage("no_response");
+                    System.out.println("[SERVER]: Signed Out");
+                    break;
+                default:
+                    responseJabberMessage = new JabberMessage("no_response");
+                    System.out.println("[SERVER]: Invalid message");
+                    break;
+            }
+        }
+    }
+
+    public static JabberMessage getResponseJabberMessage() {
+        return responseJabberMessage;
+    }
 }

@@ -1,7 +1,7 @@
 package com.bham.fsd.assignments.jabberserver.server;
 
 import com.bham.fsd.assignments.jabberserver.JabberMessage;
-import com.bham.fsd.assignments.jabberserver.controller.IncomeMessageController;
+import com.bham.fsd.assignments.jabberserver.controller.JabberController;
 
 import java.io.*;
 import java.net.Socket;
@@ -40,7 +40,7 @@ public class ServerHandler implements Runnable
      *
      * @param jmessage
      */
-    private void sendJabberMessageToClient(JabberMessage jmessage)
+    private void sendResponseJabberMessageToClient(JabberMessage jmessage)
     {
         System.out.println("[SERVER]: " + jmessage.getMessage());
         try {
@@ -51,14 +51,21 @@ public class ServerHandler implements Runnable
         }
     }
 
-    public void sendStringToAllClients(JabberMessage msg)
+    /**
+     *
+     * @param jmessage
+     */
+    public void sendResponseJabberMessageToAllClients(JabberMessage jmessage)
     {
         for (ServerHandler i : server.getClientThreadList())
         {
-            i.sendJabberMessageToClient(msg);
+            i.sendResponseJabberMessageToClient(jmessage);
         }
     }
 
+    /**
+     *  A thread for each client
+     */
     public void run()
     {
         int count = 1;
@@ -76,7 +83,6 @@ public class ServerHandler implements Runnable
 //                        e.printStackTrace();
 //                    }
 //                }
-
                 try {
                     inMsg = (JabberMessage)in.readObject();
                 }
@@ -91,8 +97,14 @@ public class ServerHandler implements Runnable
 
                 System.out.println("[SERVER]: Message: " + count);
                 count++;
-                IncomeMessageController.isValidMessage(inMsg);
-                sendStringToAllClients(outMsg);
+
+                JabberController.
+                        processRequest(inMsg);
+                outMsg = JabberController.getResponseJabberMessage();
+                if (!outMsg.getMessage().equals("no_response"))
+                {
+                    sendResponseJabberMessageToAllClients(outMsg);
+                }
 
                 System.out.println("***********************************");
                 System.out.println();
