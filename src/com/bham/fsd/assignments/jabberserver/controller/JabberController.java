@@ -7,21 +7,24 @@ public class JabberController
 {
     private static JabberDatabase jdb = new JabberDatabase();
     private static JabberMessage responseJabberMessage;
-
-
     private static final String[] INCOME_MESSAGES =
             {
                     "signin",
                     "register",
                     "signout",
-                    "timeline"
+                    "timeline",
+                    "users",
+                    "post",
+                    "like",
+                    "follow"
             };
     private static final String[] RESPONSES =
             {
                     "signedin",
                     "unknown-user",
                     "timeline",
-                    "users"
+                    "users",
+                    "posted"
             };
 
     /**
@@ -39,14 +42,28 @@ public class JabberController
         return false;
     }
 
+    public void data()
+    {
+//        jdb.getTimelineOfUserEx()
+        //username, jabtext, jabid, likes-count
+    }
+
     /**
      *
      * @param jmsg
      */
     public static void processRequest(JabberMessage jmsg)
     {
-        String prefix = jmsg.getMessage().split(" ")[0];
-        String suffix = jmsg.getMessage().split(" ")[11];
+        String prefix = "";
+        String suffix = "";
+
+        try {
+            prefix = jmsg.getMessage().split(" ")[0];
+            suffix = jmsg.getMessage().split(" ")[1];
+        } catch (ArrayIndexOutOfBoundsException e)
+        {
+            prefix = jmsg.getMessage();
+        }
 
         if(isValidJabberMessage(jmsg))
         {

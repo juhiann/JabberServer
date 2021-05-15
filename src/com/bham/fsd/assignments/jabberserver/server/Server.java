@@ -11,9 +11,11 @@ public class Server
     private final int PORT = 44444;
     private ArrayList<ServerHandler> clientThreadList = new ArrayList<>();
     private boolean shouldRun = true;
+    private int clientID;
 
     public Server()
     {
+        clientID = 1;
         try {
             listener = new ServerSocket(PORT);
 //            listener.setSoTimeout(300);
@@ -24,9 +26,10 @@ public class Server
                 Socket socket = listener.accept();
                 clientCount++;
                 System.out.println("[SERVER]: Client [" + clientCount + "] connected! ");
-                ServerHandler sh = new ServerHandler(socket, this);
+                ServerHandler sh = new ServerHandler(socket, this, clientID);
                 new Thread(sh).start();
                 clientThreadList.add(sh);
+                clientID++;
             }
         } catch(IOException e) {
             e.printStackTrace();

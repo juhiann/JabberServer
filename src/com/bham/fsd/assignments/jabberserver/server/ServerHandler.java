@@ -5,6 +5,8 @@ import com.bham.fsd.assignments.jabberserver.controller.JabberController;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.ListIterator;
 
 /**
  * @author Juhi Jose
@@ -16,6 +18,8 @@ public class ServerHandler implements Runnable
     private boolean shouldRun = true;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+    private int clientID;
+    private String username;
 
     /**
      * Constructor
@@ -23,17 +27,25 @@ public class ServerHandler implements Runnable
      * @param socket
      * @param server
      */
-    public ServerHandler(Socket socket, Server server)
+    public ServerHandler(Socket socket, Server server, int id)
     {
         this.socket = socket;
         this.server = server;
-
+        this.clientID = id;
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     /**
@@ -59,6 +71,7 @@ public class ServerHandler implements Runnable
     {
         for (ServerHandler i : server.getClientThreadList())
         {
+            System.out.println("Client ID: "+ i.clientID);
             i.sendResponseJabberMessageToClient(jmessage);
         }
     }
@@ -71,55 +84,65 @@ public class ServerHandler implements Runnable
         int count = 1;
         JabberMessage inMsg = null;
         JabberMessage outMsg = outMsg = new JabberMessage("signedin");
-        try {
-            while(shouldRun)
+
+        try{
+            while(shouldRun && in.available()==0)
             {
-//                while (in.available() != 0) //(JabberMessage)in.readObject() == null)
-//                {
-//                    System.out.println("[SERVER]: WAITING...");
-//                    try {
-//                        Thread.sleep(300);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
                 try {
                     inMsg = (JabberMessage)in.readObject();
                 }
-                catch (IOException e) {
-                    e.printStackTrace();
+                catch (SocketException | EOFException e)
+                {
+                    System.out.println("[SERVER]: Client " + this.clientID + " Disconnected");
                     break;
                 }
-                catch(ClassNotFoundException ee) {
+                catch (IOException | ClassNotFoundException ee) {
                     ee.printStackTrace();
+                    break;
+                }
+                catch (Exception allE)
+                {
                     break;
                 }
 
                 System.out.println("[SERVER]: Message: " + count);
                 count++;
 
-                JabberController.
-                        processRequest(inMsg);
-                outMsg = JabberController.getResponseJabberMessage();
-                if (!outMsg.getMessage().equals("no_response"))
-                {
-                    sendResponseJabberMessageToAllClients(outMsg);
-                }
+                JabberController.processRequest(inMsg);
 
-                System.out.println("***********************************");
-                System.out.println();
+                if (!inMsg.getMessage().equals("signout"))
+                {
+                    outMsg = JabberController.getResponseJabberMessage();
+                    if (!outMsg.getMessage().equals("no_response"))
+                    {
+                        sendResponseJabberMessageToAllClients(outMsg);
+                    }
+                }
+                else {
+                    ListIterator<ServerHandler> iter = server.getClientThreadList().listIterator();
+                    while(iter.hasNext()){
+                        if(iter.next() == this){
+                            iter.remove();
+                        }
+                    }
+                    closeServerConnection();
+                }
+                System.out.println("***********************************\n");
             }
-            in.close();
-            out.close();
             closeServerConnection();
-        }  catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
+            closeServerConnection();
         }
     }
 
     public void closeServerConnection()
     {
         try {
+            in.close();
+            out.close();
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
