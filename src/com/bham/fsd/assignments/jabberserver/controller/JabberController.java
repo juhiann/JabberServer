@@ -3,6 +3,9 @@ package com.bham.fsd.assignments.jabberserver.controller;
 import com.bham.fsd.assignments.jabberserver.JabberMessage;
 import com.bham.fsd.assignments.jabberserver.server.JabberDatabase;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 public class JabberController
 {
     private static JabberDatabase jdb = new JabberDatabase();
@@ -52,7 +55,7 @@ public class JabberController
      *
      * @param jmsg
      */
-    public static void processRequest(JabberMessage jmsg)
+    public static void processRequest(JabberMessage jmsg, String username)
     {
         String prefix = "";
         String suffix = "";
@@ -79,6 +82,7 @@ public class JabberController
                         System.out.println("[DATABASE]: User is VALID");
                     }
                     break;
+
                 case ("register"):
                     response = jdb.getUserID(suffix);
                     if(response > 0) {
@@ -90,10 +94,23 @@ public class JabberController
                         System.out.println("[DATABASE]: User added to DB");
                     }
                     break;
+
+                case ("timeline"):
+                    ArrayList<ArrayList<String>> rtimeline = jdb.getTimelineOfUserEx(username);
+                    responseJabberMessage = new JabberMessage(RESPONSES[3], rtimeline); // timeline of user as a response
+                    System.out.println("[SERVER]: Timeline transfered for user: " + username);
+                    break;
+
+                case ("users"):
+                    ArrayList<ArrayList<String>> rusers = jdb.getUsersNotFollowed(jdb.getUserID(username));
+                    responseJabberMessage = new JabberMessage(RESPONSES[3], rusers); // timeline of user as a response
+                    break;
+
                 case ("signout"):
                     responseJabberMessage = new JabberMessage("no_response");
                     System.out.println("[SERVER]: Signed Out");
                     break;
+
                 default:
                     responseJabberMessage = new JabberMessage("no_response");
                     System.out.println("[SERVER]: Invalid message");

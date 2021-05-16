@@ -58,6 +58,7 @@ public class ServerHandler implements Runnable
         try {
             out.flush();
             out.writeObject(jmessage);
+            out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,32 +84,28 @@ public class ServerHandler implements Runnable
     {
         int count = 1;
         JabberMessage inMsg = null;
-        JabberMessage outMsg = outMsg = new JabberMessage("signedin");
+        JabberMessage outMsg = null;
 
         try{
             while(shouldRun && in.available()==0)
             {
                 try {
                     inMsg = (JabberMessage)in.readObject();
-                }
-                catch (SocketException | EOFException e)
+                } catch (SocketException | EOFException e)
                 {
                     System.out.println("[SERVER]: Client " + this.clientID + " Disconnected");
                     break;
-                }
-                catch (IOException | ClassNotFoundException ee) {
+                } catch (IOException | ClassNotFoundException ee) {
                     ee.printStackTrace();
                     break;
-                }
-                catch (Exception allE)
-                {
+                } catch (Exception allE) {
                     break;
                 }
 
                 System.out.println("[SERVER]: Message: " + count);
                 count++;
 
-                JabberController.processRequest(inMsg);
+                JabberController.processRequest(inMsg, getUsername());
 
                 if (!inMsg.getMessage().equals("signout"))
                 {

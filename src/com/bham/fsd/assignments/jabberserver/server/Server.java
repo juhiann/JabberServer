@@ -15,6 +15,8 @@ public class Server
 
     public Server()
     {
+        JabberDatabase jdb = new JabberDatabase();
+        jdb.resetDatabase();
         clientID = 1;
         try {
             listener = new ServerSocket(PORT);
@@ -39,5 +41,4 @@ public class Server
     public ArrayList<ServerHandler> getClientThreadList() {
         return this.clientThreadList;
     }
-
 }
