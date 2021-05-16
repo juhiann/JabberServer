@@ -135,7 +135,6 @@ public class JabberController
             }
         }
     }
-
     public static JabberMessage getResponseJabberMessage() {
         return responseJabberMessage;
     }
