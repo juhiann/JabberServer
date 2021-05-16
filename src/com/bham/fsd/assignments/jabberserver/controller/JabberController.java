@@ -59,6 +59,7 @@ public class JabberController
     {
         String prefix = "";
         String suffix = "";
+        StringBuilder jab = new StringBuilder("");
 
         try {
             prefix = jmsg.getMessage().split(" ")[0];
@@ -97,13 +98,29 @@ public class JabberController
 
                 case ("timeline"):
                     ArrayList<ArrayList<String>> rtimeline = jdb.getTimelineOfUserEx(username);
-                    responseJabberMessage = new JabberMessage(RESPONSES[3], rtimeline); // timeline of user as a response
+                    responseJabberMessage = new JabberMessage(RESPONSES[2], rtimeline); // timeline of user as a response
                     System.out.println("[SERVER]: Timeline transfered for user: " + username);
                     break;
 
                 case ("users"):
                     ArrayList<ArrayList<String>> rusers = jdb.getUsersNotFollowed(jdb.getUserID(username));
                     responseJabberMessage = new JabberMessage(RESPONSES[3], rusers); // timeline of user as a response
+                    break;
+
+                case ("like"):
+                    jdb.addLike(jdb.getUserID(username), Integer.parseInt(suffix));
+                    responseJabberMessage = new JabberMessage(RESPONSES[4]); // "posted"
+                    break;
+
+                case ("post"):
+                    String []  jabMessageParts = jmsg.getMessage().trim().split(" ");
+                    for (int i = 1; i < jabMessageParts.length; i++)
+                    {
+                        jab.append(jabMessageParts[i] + " ");
+                    }
+                    suffix = jab.toString().trim();
+                    jdb.addJab(username, suffix);
+                    responseJabberMessage = new JabberMessage(RESPONSES[4]); // "posted"
                     break;
 
                 case ("signout"):
