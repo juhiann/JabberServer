@@ -4,6 +4,9 @@ import com.bham.fsd.assignments.jabberserver.JabberMessage;
 import com.bham.fsd.assignments.jabberserver.server.JabberDatabase;
 import java.util.ArrayList;
 
+/**
+ * @author Juhi Jose
+ */
 public class JabberController
 {
     private static JabberDatabase jdb = new JabberDatabase();
