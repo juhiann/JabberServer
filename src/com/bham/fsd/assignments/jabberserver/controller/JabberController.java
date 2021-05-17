@@ -2,8 +2,6 @@ package com.bham.fsd.assignments.jabberserver.controller;
 
 import com.bham.fsd.assignments.jabberserver.JabberMessage;
 import com.bham.fsd.assignments.jabberserver.server.JabberDatabase;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class JabberController
@@ -43,12 +41,6 @@ public class JabberController
             }
         }
         return false;
-    }
-
-    public void data()
-    {
-//        jdb.getTimelineOfUserEx()
-        //username, jabtext, jabid, likes-count
     }
 
     /**
@@ -98,8 +90,8 @@ public class JabberController
 
                 case ("timeline"):
                     ArrayList<ArrayList<String>> rtimeline = jdb.getTimelineOfUserEx(username);
-                    responseJabberMessage = new JabberMessage(RESPONSES[2], rtimeline); // timeline of user as a response
-                    System.out.println("[SERVER]: Timeline transfered for user: " + username);
+                    responseJabberMessage = new JabberMessage(RESPONSES[2], rtimeline);
+                    // timeline of user as a response
                     break;
 
                 case ("users"):
@@ -113,10 +105,13 @@ public class JabberController
                     break;
 
                 case ("post"):
-                    String []  jabMessageParts = jmsg.getMessage().trim().split(" ");
-                    for (int i = 1; i < jabMessageParts.length; i++)
+                    String[]  jabMessageParts = jmsg.getMessage().trim().split(" ");
+                    if (jabMessageParts.length > 1)
                     {
-                        jab.append(jabMessageParts[i] + " ");
+                        for (int i = 1; i < jabMessageParts.length; i++)
+                        {
+                            jab.append(jabMessageParts[i] + " ");
+                        }
                     }
                     suffix = jab.toString().trim();
                     jdb.addJab(username, suffix);
@@ -125,7 +120,6 @@ public class JabberController
 
                 case ("signout"):
                     responseJabberMessage = new JabberMessage("no_response");
-                    System.out.println("[SERVER]: Signed Out");
                     break;
 
                 default:

@@ -19,7 +19,7 @@ public class ServerHandler implements Runnable
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private int clientID;
-    private String username;
+    private static JabberDatabase jdb = new JabberDatabase();
 
     /**
      * Constructor
@@ -40,13 +40,6 @@ public class ServerHandler implements Runnable
         }
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     /**
      *
@@ -54,11 +47,13 @@ public class ServerHandler implements Runnable
      */
     private void sendResponseJabberMessageToClient(JabberMessage jmessage)
     {
-        System.out.println("[SERVER]: " + jmessage.getMessage());
+        System.out.println("[SERVER]: " + "Client ID: "+ this.clientID + ": " + jmessage.getMessage());
         try {
             out.flush();
             out.writeObject(jmessage);
             out.flush();
+        } catch (SocketException e)
+        {
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -72,7 +67,6 @@ public class ServerHandler implements Runnable
     {
         for (ServerHandler i : server.getClientThreadList())
         {
-            System.out.println("Client ID: "+ i.clientID);
             i.sendResponseJabberMessageToClient(jmessage);
         }
     }
@@ -82,9 +76,9 @@ public class ServerHandler implements Runnable
      */
     public void run()
     {
-        int count = 1;
         JabberMessage inMsg = null;
         JabberMessage outMsg = null;
+        String localUsername = null;
 
         try{
             while(shouldRun && in.available()==0)
@@ -102,10 +96,17 @@ public class ServerHandler implements Runnable
                     break;
                 }
 
-                System.out.println("[SERVER]: Message: " + count);
-                count++;
+                if (inMsg.getMessage().contains("signin"))
+                {
+                    int response = jdb.getUserID(inMsg.getMessage().split(" ")[1]);
+                    if(response < 0) {
+                        //do nothing
+                    } else {
+                        localUsername = inMsg.getMessage().split(" ")[1];
+                    }
+                }
 
-                JabberController.processRequest(inMsg, getUsername());
+                JabberController.processRequest(inMsg, localUsername);
 
                 if (!inMsg.getMessage().equals("signout"))
                 {
@@ -117,14 +118,14 @@ public class ServerHandler implements Runnable
                 }
                 else {
                     ListIterator<ServerHandler> iter = server.getClientThreadList().listIterator();
-                    while(iter.hasNext()){
+                    while(iter.hasNext())
+                    {
                         if(iter.next() == this){
                             iter.remove();
                         }
                     }
                     closeServerConnection();
                 }
-                System.out.println("***********************************\n");
             }
             closeServerConnection();
         }
