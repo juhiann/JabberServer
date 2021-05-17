@@ -5,6 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * @author Juhi Jose
+ */
 public class Server
 {
     private ServerSocket listener;
